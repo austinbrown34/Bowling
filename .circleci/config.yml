@@ -72,7 +72,7 @@ jobs:
       - run:
           name: Deploy Staging to Heroku Staging
           command: |
-            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_STAGE.git staging
+            git push https://heroku:$HEROKU_API_KEY@git.heroku.com/$HEROKU_APP_NAME_STAGE.git staging:master
   deploy-prod:
     docker:
       - image: circleci/python:3.6.4
