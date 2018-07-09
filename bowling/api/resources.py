@@ -2,7 +2,7 @@ from tastypie.resources import ModelResource, ALL_WITH_RELATIONS, ALL
 from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
 from tastypie.authorization import Authorization, DjangoAuthorization
 from tastypie import fields
-from bowling.models import Player, Frame, Chance, Game, PlayerGame, GamePlayer
+from bowling.models import Player, Frame, Chance, Game, PlayerGame
 
 
 ALL_METHODS = ['get', 'post', 'put', 'delete', 'patch']
@@ -66,7 +66,6 @@ class ChanceResource(ModelResource):
 
 
 class GameResource(ModelResource):
-    players = fields.ToManyField(PlayerResource, 'players', null=True, full=True)
     class Meta:
         queryset = Game.objects.all()
         allowed_methods = ALL_METHODS
@@ -79,36 +78,14 @@ class GameResource(ModelResource):
         }
         filtering = {
             'id': ALL,
-            'players': ALL_WITH_RELATIONS,
-            'date_created': ALL,
-            'date_updated': ALL
-        }
-
-
-class GamePlayerResource(ModelResource):
-    player = fields.ForeignKey(PlayerResource, 'player', null=True, full=True)
-    game = fields.ForeignKey(GameResource, 'game', null=True, full=True)
-    class Meta:
-        queryset = GamePlayer.objects.all()
-        allowed_methods = ALL_METHODS
-        resource_name = 'gameplayer'
-        authorization = DjangoAuthorization()
-        authentication = MultiAuthentication(ApiKeyAuthentication(), SessionAuthentication())
-        ordering = {
-            'date_created': ALL,
-            'date_updated': ALL
-        }
-        filtering = {
-            'id': ALL,
-            'player': ALL_WITH_RELATIONS,
-            'game': ALL_WITH_RELATIONS,
             'date_created': ALL,
             'date_updated': ALL
         }
 
 
 class PlayerGameResource(ModelResource):
-    player = fields.ForeignKey(GamePlayerResource, 'player', null=True, full=True)
+    player = fields.ForeignKey(PlayerResource, 'player', null=True, full=True)
+    game = fields.ForeignKey(GameResource, 'game', null=True, full=True)
     frame = fields.ForeignKey(FrameResource, 'frame', null=True, full=True)
     chance = fields.ForeignKey(ChanceResource, 'chance', null=True, full=True)
     class Meta:

@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import include, path
 from tastypie.api import Api
-from bowling.api.resources import PlayerResource, FrameResource, ChanceResource, GameResource, PlayerGameResource, GamePlayerResource
+from bowling.api.resources import PlayerResource, FrameResource, ChanceResource, GameResource, PlayerGameResource
 
 
 v1_api = Api(api_name='v1')
@@ -25,7 +25,6 @@ v1_api.register(FrameResource())
 v1_api.register(ChanceResource())
 v1_api.register(GameResource())
 v1_api.register(PlayerGameResource())
-v1_api.register(GamePlayerResource())
 
 urlpatterns = [
     path('bowling/', include('bowling.urls')),
