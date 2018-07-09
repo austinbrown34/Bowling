@@ -49,6 +49,7 @@ class Chance(models.Model):
 class Game(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
+    players = models.ManyToManyField(Player, through="GamePlayer")
 
     class Meta:
         verbose_name = 'Game'
@@ -60,9 +61,25 @@ class Game(models.Model):
         )
 
 
-class PlayerGame(models.Model):
+class GamePlayer(models.Model):
     player = models.ForeignKey(Player, on_delete=models.PROTECT)
     game = models.ForeignKey(Game, on_delete=models.PROTECT)
+    date_created = models.DateTimeField(auto_now_add=True)
+    date_updated = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'GamePlayer'
+        verbose_name_plural = 'GamePlayers'
+
+    def __str__(self):
+        return '{}({})'.format(
+            self.player,
+            self.game
+        )
+
+
+class PlayerGame(models.Model):
+    player = models.ForeignKey(GamePlayer, on_delete=models.PROTECT)
     mark = models.CharField(max_length=2)
     frame = models.ForeignKey(Frame, on_delete=models.PROTECT)
     chance = models.ForeignKey(Chance, on_delete=models.PROTECT)
