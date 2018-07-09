@@ -50,6 +50,9 @@ class Game(models.Model):
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     players = models.ManyToManyField(Player, through="GamePlayer")
+    current_frame = models.IntegerField(default=0)
+    current_chance = models.IntegerField(default=0)
+    current_player_index = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Game'
