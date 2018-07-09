@@ -91,9 +91,8 @@ class PlayerGame(models.Model):
         verbose_name_plural = 'PlayerGame'
 
     def __str__(self):
-        return '{}({}) - ({}/{}) - {}'.format(
+        return '{} - ({}/{}) - {}'.format(
             self.player,
-            self.game,
             self.frame,
             self.chance,
             self.mark
