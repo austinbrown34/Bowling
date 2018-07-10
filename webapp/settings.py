@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'tastypie',
+    'django_nose',
 ]
 
 MIDDLEWARE = [
@@ -125,6 +126,8 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+TEST_RUNNER = 'django_nose.NoseTestSuiteRunner'
+NOSE_ARGS = ['--with-spec', '--spec-color']
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.0/topics/i18n/
