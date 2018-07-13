@@ -204,6 +204,7 @@ class Game(models.Model):
     def start(self):
         self.current_frame = 1
         self.current_chance = 1
+        self.status = 1
 
     def reset_current_chance(self):
         self.current_chance = 1
@@ -218,6 +219,8 @@ class Game(models.Model):
         if self.current_frame < Game.total_frames():
             self.current_frame += 1
             self.reset_current_chance()
+        else:
+            self.status = -1
 
     def extra_chance(self, prev_mark):
         if self.current_chance < Game.frame_chances(self.current_frame):
