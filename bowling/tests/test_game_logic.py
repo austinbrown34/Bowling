@@ -4,6 +4,13 @@ from bowling.models import Game
 
 class GameTests(TestCase):
 
+    def test_max_chances(self):
+        """
+        max_chances() returns max number of chances for all frames.
+        """
+
+        self.assertEqual(Game.max_chances(), 3)
+
     def test_total_frames(self):
         """
         total_frames() returns total number of frames in a game.
