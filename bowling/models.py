@@ -205,15 +205,19 @@ class Game(models.Model):
         self.current_frame = 1
         self.current_chance = 1
         self.status = 1
+        self.save()
+        return self.get_state()
 
     def reset_current_chance(self):
         self.current_chance = 1
+        self.save()
 
     def next_player(self):
         if self.current_player_index == self.number_of_players - 1:
             self.current_player_index = 0
         else:
             self.current_player_index += 1
+        self.save()
 
     def next_frame(self):
         if self.current_frame < Game.total_frames():
@@ -221,6 +225,7 @@ class Game(models.Model):
             self.reset_current_chance()
         else:
             self.status = -1
+        self.save()
 
     def extra_chance(self, prev_mark):
         if self.current_chance < Game.frame_chances(self.current_frame):
@@ -248,6 +253,7 @@ class Game(models.Model):
                 else:
                     self.reset_current_chance()
                 self.next_player()
+        self.save()
 
     def bowl(self, mark):
         if self.is_game_over:
