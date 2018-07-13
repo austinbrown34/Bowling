@@ -84,6 +84,7 @@ class Game(models.Model):
     current_frame = models.IntegerField(default=0)
     current_chance = models.IntegerField(default=0)
     current_player_index = models.IntegerField(default=0)
+    status = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Game'
@@ -160,31 +161,27 @@ class Game(models.Model):
 
     @property
     def is_game_over(self):
-        if self.number_of_players:
-            last_player = self.players.last()
-            game_player = self.get_gameplayer(last_player)
-            try:
-                PlayerGame.objects.get(
-                    player=game_player,
-                    frame__number=Game.total_frames(),
-                    chance__number=Game.frame_chances(Game.total_frames())
-                )
-                return True
-            except ObjectDoesNotExist:
-                pass
+        if self.status == -1:
+            return True
         return False
 
     @property
     def has_game_begun(self):
-        if self.current_frame:
-            return True
-        return False
+        if self.status == 0:
+            return False
+        return True
 
     @property
     def is_game_active(self):
         if self.has_game_begun and not self.is_game_over:
             return True
         return False
+
+    def get_player(self, index):
+        if index < self.number_of_players:
+            return self.players.all()[index]
+        else:
+            return None
 
     def get_state(self):
         return {
@@ -207,6 +204,7 @@ class Game(models.Model):
     def start(self):
         self.current_frame = 1
         self.current_chance = 1
+        self.status = 1
 
     def reset_current_chance(self):
         self.current_chance = 1
@@ -221,6 +219,8 @@ class Game(models.Model):
         if self.current_frame < Game.total_frames():
             self.current_frame += 1
             self.reset_current_chance()
+        else:
+            self.status = -1
 
     def extra_chance(self, prev_mark):
         if self.current_chance < Game.frame_chances(self.current_frame):
@@ -243,7 +243,10 @@ class Game(models.Model):
             if self.extra_chance(prev_mark):
                 self.current_chance += 1
             else:
-                self.next_frame()
+                if self.current_player_index == self.number_of_players - 1:
+                    self.next_frame()
+                else:
+                    self.reset_current_chance()
                 self.next_player()
 
     def bowl(self, mark):
