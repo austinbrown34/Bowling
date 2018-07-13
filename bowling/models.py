@@ -177,6 +177,12 @@ class Game(models.Model):
             return True
         return False
 
+    def get_player(self, index):
+        if index < self.number_of_players:
+            return self.players.all()[index]
+        else:
+            return None
+
     def get_state(self):
         return {
             'frame': self.current_frame,
