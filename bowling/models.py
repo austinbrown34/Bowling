@@ -88,6 +88,10 @@ class Game(models.Model):
         return FRAME_CHANCES[frame_number]
 
     @staticmethod
+    def max_chances():
+        return max(FRAME_CHANCES.items())[1]
+
+    @staticmethod
     def chance_points(chance):
         if chance == 'x' or chance == '/':
             return 10
