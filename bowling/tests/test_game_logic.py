@@ -36,11 +36,15 @@ class GameTests(TestCase):
         of marks.
         """
 
+        just_two = ['5', '3']
+        just_three = ['5', '3', '1']
         random_marks = ['5', '3', '6', '/', '3', '/', '6', '0', 'x', '6', '/', '0', '/', '6']
         all_strikes = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']
         all_spares = ['9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9', '/', '9']
         all_strikes_but_one = ['x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x', 'x']
 
+        self.assertEqual(Game.calculate_score(just_two), 8)
+        self.assertEqual(Game.calculate_score(just_three), 8)
         self.assertEqual(Game.calculate_score(all_strikes), 300)
         self.assertEqual(Game.calculate_score(all_spares), 190)
         self.assertEqual(Game.calculate_score(random_marks), 89)
