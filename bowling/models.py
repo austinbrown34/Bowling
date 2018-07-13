@@ -279,6 +279,19 @@ class GamePlayer(models.Model):
             self.game
         )
 
+    def get_game_marks(self):
+        game_marks = PlayerGame.objects.filter(
+            player=self
+        ).order_by('frame', 'chance')
+        return game_marks
+
+    def get_marks_list(self):
+        marks = []
+        game_marks = self.get_game_marks()
+        for game_mark in game_marks:
+            marks.append(game_mark.mark)
+        return marks
+
 
 class PlayerGame(models.Model):
     player = models.ForeignKey(GamePlayer, on_delete=models.PROTECT)
