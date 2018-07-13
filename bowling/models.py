@@ -1,5 +1,8 @@
+from django.contrib.auth.models import User
 from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 
 TOTAL_FRAMES = 10
@@ -18,6 +21,7 @@ FRAME_CHANCES = {
 
 
 class Player(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=5)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
@@ -30,6 +34,17 @@ class Player(models.Model):
         return '{}'.format(
             self.name
         )
+
+
+@receiver(post_save, sender=User)
+def create_user_player(sender, instance, created, **kwargs):
+    if created:
+        Player.objects.create(user=instance)
+
+
+@receiver(post_save, sender=User)
+def save_user_player(sender, instance, **kwargs):
+    instance.player.save()
 
 
 class Frame(models.Model):
@@ -264,8 +279,8 @@ class Game(models.Model):
 
 
 class GamePlayer(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.PROTECT)
-    game = models.ForeignKey(Game, on_delete=models.PROTECT)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
 
@@ -294,7 +309,7 @@ class GamePlayer(models.Model):
 
 
 class PlayerGame(models.Model):
-    player = models.ForeignKey(GamePlayer, on_delete=models.PROTECT)
+    player = models.ForeignKey(GamePlayer, on_delete=models.CASCADE)
     mark = models.CharField(max_length=2)
     frame = models.ForeignKey(Frame, on_delete=models.PROTECT)
     chance = models.ForeignKey(Chance, on_delete=models.PROTECT)

@@ -4,24 +4,11 @@ import re
 
 class GameManager(object):
     @staticmethod
-    def new_game(player_names):
+    def new_game(player_ids):
         GameManager.setup()
-        sanitized_player_names = GameManager.sanitize_player_names(
-            player_names
-        )
         game = GameManager.create_game()
-        GameManager.create_game_players(game, sanitized_player_names)
+        GameManager.create_game_players(game, player_ids)
         return game
-
-    @staticmethod
-    def sanitize_player_names(player_names):
-        sanitized_player_names = []
-        pattern = re.compile('[\W_]+')
-        for name in player_names:
-            sanitized_player_names.append(
-                pattern.sub('', name)[:5]
-            )
-        return sanitized_player_names
 
     @staticmethod
     def create_game():
@@ -29,11 +16,9 @@ class GameManager(object):
         return game
 
     @staticmethod
-    def create_game_players(game, player_names):
-        for name in player_names:
-            player, created_player = Player.objects.get_or_create(
-                name=name
-            )
+    def create_game_players(game, player_ids):
+        for id in player_ids:
+            player = Player.objects.get(id=id)
             gp, created_gp = GamePlayer.objects.get_or_create(
                 player=player,
                 game=game
