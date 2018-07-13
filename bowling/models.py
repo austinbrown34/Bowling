@@ -84,6 +84,7 @@ class Game(models.Model):
     current_frame = models.IntegerField(default=0)
     current_chance = models.IntegerField(default=0)
     current_player_index = models.IntegerField(default=0)
+    status = models.IntegerField(default=0)
 
     class Meta:
         verbose_name = 'Game'
@@ -160,25 +161,15 @@ class Game(models.Model):
 
     @property
     def is_game_over(self):
-        if self.number_of_players:
-            last_player = self.players.last()
-            game_player = self.get_gameplayer(last_player)
-            try:
-                PlayerGame.objects.get(
-                    player=game_player,
-                    frame__number=Game.total_frames(),
-                    chance__number=Game.frame_chances(Game.total_frames())
-                )
-                return True
-            except ObjectDoesNotExist:
-                pass
+        if self.status == -1:
+            return True
         return False
 
     @property
     def has_game_begun(self):
-        if self.current_frame:
-            return True
-        return False
+        if self.status == 0:
+            return False
+        return True
 
     @property
     def is_game_active(self):
