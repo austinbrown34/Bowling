@@ -279,8 +279,8 @@ class Game(models.Model):
 
 
 class GamePlayer(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.PROTECT)
-    game = models.ForeignKey(Game, on_delete=models.PROTECT)
+    player = models.ForeignKey(Player, on_delete=models.CASCADE)
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
 
@@ -309,7 +309,7 @@ class GamePlayer(models.Model):
 
 
 class PlayerGame(models.Model):
-    player = models.ForeignKey(GamePlayer, on_delete=models.PROTECT)
+    player = models.ForeignKey(GamePlayer, on_delete=models.CASCADE)
     mark = models.CharField(max_length=2)
     frame = models.ForeignKey(Frame, on_delete=models.PROTECT)
     chance = models.ForeignKey(Chance, on_delete=models.PROTECT)
