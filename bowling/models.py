@@ -243,7 +243,10 @@ class Game(models.Model):
             if self.extra_chance(prev_mark):
                 self.current_chance += 1
             else:
-                self.next_frame()
+                if self.current_player_index == self.number_of_players - 1:
+                    self.next_frame()
+                else:
+                    self.reset_current_chance()
                 self.next_player()
 
     def bowl(self, mark):
