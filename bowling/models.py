@@ -102,21 +102,27 @@ class Game(models.Model):
     def calculate_score(marks):
         score = 0
         x = 0
-        while x < len(marks) - 2:
+        while x < len(marks) - 1:
             if marks[x] == 'x':
-                if marks[x + 2] == '/':
-                    score += 20
-                else:
-                    score += (
-                        10 +
-                        Game.chance_points(marks[x + 1]) +
-                        Game.chance_points(marks[x + 2])
-                    )
+                try:
+                    if marks[x + 2] == '/':
+                        score += 20
+                    else:
+                        score += (
+                            10 +
+                            Game.chance_points(marks[x + 1]) +
+                            Game.chance_points(marks[x + 2])
+                        )
+                except Exception:
+                    pass
                 x += 1
             elif marks[x + 1] == '/':
-                score += (
-                    10 + Game.chance_points(marks[x + 2])
-                )
+                try:
+                    score += (
+                        10 + Game.chance_points(marks[x + 2])
+                    )
+                except Exception:
+                    pass
                 x += 2
             else:
                 score += (
