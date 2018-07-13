@@ -165,6 +165,20 @@ class Game(models.Model):
             return True
         return False
 
+    @property
+    def is_game_active(self):
+        if self.has_game_begun and not self.is_game_over:
+            return True
+        return False
+
+    def get_state(self):
+        return {
+            'frame': self.current_frame,
+            'chance': self.current_chance,
+            'player': self.current_player,
+            'scores': self.get_scores()
+        }
+
     def get_gameplayer(self, player):
         try:
             game_player = GamePlayer.objects.get(
@@ -179,19 +193,74 @@ class Game(models.Model):
         self.current_frame = 1
         self.current_chance = 1
 
-    def next(self):
-        if self.has_game_begun and not self.is_game_over:
-            if self.current_chance == Game.frame_chances(self.current_frame):
-                if self.current_player_index == self.number_of_players - 1:
-                    if self.current_frame < Game.total_frames():
-                        self.current_frame += 1
-                        self.current_chance = 1
-                        self.current_player_index = 0
+    def reset_current_chance(self):
+        self.current_chance = 1
+
+    def next_player(self):
+        if self.current_player_index == self.number_of_players - 1:
+            self.current_player_index = 0
+        else:
+            self.current_player_index += 1
+
+    def next_frame(self):
+        if self.current_frame < Game.total_frames():
+            self.current_frame += 1
+            self.reset_current_chance()
+
+    def extra_chance(self, prev_mark):
+        if self.current_chance < Game.frame_chances(self.current_frame):
+            if self.current_frame == Game.total_frames():
+                if self.current_chance == 1:
+                    return True
+                elif self.current_chance != 1 and prev_mark in ['/', 'x']:
+                    return True
                 else:
-                    self.current_chance = 1
-                    self.current_player_index += 1
+                    return False
             else:
+                if prev_mark in ['/', 'x']:
+                    return False
+                else:
+                    return True
+        return False
+
+    def next(self, prev_mark):
+        if self.is_game_active:
+            if self.extra_chance(prev_mark):
                 self.current_chance += 1
+            else:
+                self.next_frame()
+                self.next_player()
+
+    def bowl(self, mark):
+        if self.is_game_over:
+            return 'Game is Over!'
+        if not self.has_game_begun:
+            return 'Game has not Started!'
+        frame = Frame.objects.get(number=self.current_frame)
+        chance = Chance.objects.get(number=self.current_chance)
+        player_game = PlayerGame.objects.create(
+            player=self.get_gameplayer(self.current_player),
+            mark=mark,
+            frame=frame,
+            chance=chance
+        )
+        self.next(mark)
+        return player_game
+
+    def get_player_score(self, game_player):
+        return Game.calculate_score(game_player.get_marks_list())
+
+    def get_current_player_score(self):
+        game_player = self.get_gameplayer(self.current_player)
+        return self.get_player_score(game_player)
+
+    def get_scores(self):
+        player_scores = {}
+        for i, player in enumerate(self.players.all()):
+            player_scores[i] = {
+                player.name: self.get_player_score(self.get_gameplayer(player))
+            }
+        return player_scores
 
 
 class GamePlayer(models.Model):
