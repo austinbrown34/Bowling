@@ -194,7 +194,7 @@ class GameResource(ModelResource):
         }
 
     def prepend_urls(self):
-        """ Add following array of urls to GameManagerResource base urls """
+        """ Add following array of urls to GameResource base urls """
         return [
             url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/start%s$" %
                 (self._meta.resource_name, trailing_slash()),
