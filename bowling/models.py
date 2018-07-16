@@ -3,6 +3,7 @@ from django.db import models
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from tastypie.models import create_api_key
 
 
 TOTAL_FRAMES = 10
@@ -19,6 +20,7 @@ FRAME_CHANCES = {
     10: 3
 }
 
+post_save.connect(create_api_key, sender=User)
 
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
