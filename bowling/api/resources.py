@@ -33,7 +33,8 @@ class GameManagerResource(Resource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
 
     def get_object_list(self, request):
@@ -85,7 +86,8 @@ class PlayerResource(ModelResource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
         ordering = {
             'date_created': ALL,
@@ -152,7 +154,8 @@ class GameResource(ModelResource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
         ordering = {
             'date_created': ALL,
