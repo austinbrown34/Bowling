@@ -100,6 +100,31 @@ class PlayerResource(ModelResource):
             'date_updated': ALL
         }
 
+    def prepend_urls(self):
+        """ Add following array of urls to PlayerResource base urls """
+        return [
+            url(r"^(?P<resource_name>%s)/create%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('create'), name="create")
+        ]
+
+    def create(self, request, **kwargs):
+        self.is_authenticated(request)
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            user = data['user']
+            name = data['name']
+        new_user = User.objects.create_user(
+            username=user['username'],
+            password=user['password']
+        )
+        new_user.player.name = name
+        User.save(new_user)
+        return self.create_response(
+            request,
+            {'New Player': self.get_resource_uri(new_user)}
+        )
+
 
 class FrameResource(ModelResource):
     class Meta:
