@@ -5,6 +5,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from tastypie.models import create_api_key
 
+# Constants
 
 TOTAL_FRAMES = 10
 FRAME_CHANCES = {
@@ -20,9 +21,15 @@ FRAME_CHANCES = {
     10: 3
 }
 
+# Create API Key when User is created
 post_save.connect(create_api_key, sender=User)
 
+
 class Player(models.Model):
+    """Player is a User with a name (<= 5 chars) used in Games.
+
+    """
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=5)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -40,16 +47,25 @@ class Player(models.Model):
 
 @receiver(post_save, sender=User)
 def create_user_player(sender, instance, created, **kwargs):
+    """Associates User with Player as a One-To-One Relationship.
+
+    """
     if created:
         Player.objects.create(user=instance)
 
 
 @receiver(post_save, sender=User)
 def save_user_player(sender, instance, **kwargs):
+    """Saves player attribute to User.
+
+    """
     instance.player.save()
 
 
 class Frame(models.Model):
+    """Frame represents a bowling frame and is identified by it's number.
+
+    """
     number = models.IntegerField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
@@ -65,6 +81,9 @@ class Frame(models.Model):
 
 
 class Chance(models.Model):
+    """Chance represents one of many chances to bowl within a frame.
+
+    """
     number = models.IntegerField()
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
@@ -80,6 +99,9 @@ class Chance(models.Model):
 
 
 class Game(models.Model):
+    """Game has many Players and the state of a bowling game.
+
+    """
     date_created = models.DateTimeField(auto_now_add=True)
     date_updated = models.DateTimeField(auto_now=True)
     players = models.ManyToManyField(Player, through="GamePlayer")
@@ -99,18 +121,30 @@ class Game(models.Model):
 
     @staticmethod
     def total_frames():
+        """Returns int value representing max number of frames in a game.
+
+        """
         return TOTAL_FRAMES
 
     @staticmethod
     def frame_chances(frame_number):
+        """Takes a frame_number and returns max number of chances for that frame.
+
+        """
         return FRAME_CHANCES[frame_number]
 
     @staticmethod
     def max_chances():
+        """Returns the max number of chances for any/all frames.
+
+        """
         return max(FRAME_CHANCES.items())[1]
 
     @staticmethod
     def chance_points(chance):
+        """Takes a str representing a mark on a given chance and returns int value.
+
+        """
         if chance == 'x' or chance == '/':
             return 10
         else:
@@ -118,6 +152,9 @@ class Game(models.Model):
 
     @staticmethod
     def calculate_score(marks):
+        """Takes list of str marks for a Player and returns (int) current score
+
+        """
         score = 0
         x = 0
         while x < len(marks) - 1:
@@ -152,10 +189,16 @@ class Game(models.Model):
 
     @property
     def number_of_players(self):
+        """Returns int representing number of players for game.
+
+        """
         return len(self.players.all())
 
     @property
     def current_player(self):
+        """Returns current Player or None.
+
+        """
         if self.number_of_players:
             return self.players.all()[self.current_player_index]
         else:
@@ -163,29 +206,44 @@ class Game(models.Model):
 
     @property
     def is_game_over(self):
+        """Returns bool representing whether game is over.
+
+        """
         if self.status == -1:
             return True
         return False
 
     @property
     def has_game_begun(self):
+        """Returns bool representing whether game has begun.
+
+        """
         if self.status == 0:
             return False
         return True
 
     @property
     def is_game_active(self):
+        """Returns bool representing whether game is active.
+
+        """
         if self.has_game_begun and not self.is_game_over:
             return True
         return False
 
     def get_player(self, index):
+        """Takes int index and returns Player of game at that index.
+
+        """
         if index < self.number_of_players:
             return self.players.all()[index]
         else:
             return None
 
     def get_state(self):
+        """Returns dict representing current state of game.
+
+        """
         return {
             'frame': self.current_frame,
             'chance': self.current_chance,
@@ -194,6 +252,9 @@ class Game(models.Model):
         }
 
     def get_gameplayer(self, player):
+        """Takes Player and returns GamePlayer.
+
+        """
         try:
             game_player = GamePlayer.objects.get(
                 player=player,
@@ -204,6 +265,9 @@ class Game(models.Model):
             return None
 
     def start(self):
+        """Sets state to start game and returns representation of that state.
+
+        """
         self.current_frame = 1
         self.current_chance = 1
         self.status = 1
@@ -211,10 +275,16 @@ class Game(models.Model):
         return self.get_state()
 
     def reset_current_chance(self):
+        """Sets current_chance back to 1.
+
+        """
         self.current_chance = 1
         self.save()
 
     def next_player(self):
+        """Updates current_player_index to represent next player.
+
+        """
         if self.current_player_index == self.number_of_players - 1:
             self.current_player_index = 0
         else:
@@ -222,6 +292,9 @@ class Game(models.Model):
         self.save()
 
     def next_frame(self):
+        """Advances current_frame if less than total_frames.
+
+        """
         if self.current_frame < Game.total_frames():
             self.current_frame += 1
             self.reset_current_chance()
@@ -230,6 +303,9 @@ class Game(models.Model):
         self.save()
 
     def extra_chance(self, prev_mark):
+        """Takes str prev_mark of Player and returns bool representing whether another chance is given.
+
+        """
         if self.current_chance < Game.frame_chances(self.current_frame):
             if self.current_frame == Game.total_frames():
                 if self.current_chance == 1:
@@ -246,6 +322,9 @@ class Game(models.Model):
         return False
 
     def next(self, prev_mark):
+        """Advances current state to next state.
+
+        """
         if self.is_game_active:
             if self.extra_chance(prev_mark):
                 self.current_chance += 1
@@ -258,6 +337,9 @@ class Game(models.Model):
         self.save()
 
     def bowl(self, mark):
+        """Takes a str mark and creates and returns PlayerGame.
+
+        """
         if self.is_game_over:
             return 'Game is Over!'
         if not self.has_game_begun:
@@ -274,13 +356,22 @@ class Game(models.Model):
         return player_game
 
     def get_player_score(self, game_player):
+        """Takes GamePlayer and returns int representing current score of Player.
+
+        """
         return Game.calculate_score(game_player.get_marks_list())
 
     def get_current_player_score(self):
+        """Returns current Player's current int score.
+
+        """
         game_player = self.get_gameplayer(self.current_player)
         return self.get_player_score(game_player)
 
     def get_scores(self):
+        """Returns dict representing Players' current scores of game.
+
+        """
         player_scores = {}
         for i, player in enumerate(self.players.all()):
             player_scores[i] = {
@@ -290,6 +381,9 @@ class Game(models.Model):
 
 
 class GamePlayer(models.Model):
+    """GamePlayer is a representation of the relationship between Player and Game.
+
+    """
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     date_created = models.DateTimeField(auto_now_add=True)
@@ -306,12 +400,18 @@ class GamePlayer(models.Model):
         )
 
     def get_game_marks(self):
+        """Returns PlayerGames for GamePlayer ordered by frame, chance.
+
+        """
         game_marks = PlayerGame.objects.filter(
             player=self
         ).order_by('frame', 'chance')
         return game_marks
 
     def get_marks_list(self):
+        """Returns PlayerGames for GamePlayer ordered by frame, chance as list of marks.
+
+        """
         marks = []
         game_marks = self.get_game_marks()
         for game_mark in game_marks:
@@ -320,6 +420,9 @@ class GamePlayer(models.Model):
 
 
 class PlayerGame(models.Model):
+    """PlayerGame represents the stats of a GamePlayer for a specific Frame/Chance.
+
+    """
     player = models.ForeignKey(GamePlayer, on_delete=models.CASCADE)
     mark = models.CharField(max_length=2)
     frame = models.ForeignKey(Frame, on_delete=models.PROTECT)
