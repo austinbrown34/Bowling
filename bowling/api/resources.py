@@ -67,10 +67,9 @@ class GameManagerResource(Resource):
         return self._build_reverse_url('api_dispatch_detail', kwargs=kwargs)
 
     def new_game(self, request, **kwargs):
+        self.is_authenticated(request)
         if request.method == 'GET':
             players = request.GET.get('players', '')
-        if request.method == 'POST':
-            players = request.POST.get('players', '')
         game = GameManager.new_game(players.split(','))
         return self.create_response(
             request,
