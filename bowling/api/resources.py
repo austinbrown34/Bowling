@@ -78,6 +78,7 @@ class GameManagerResource(Resource):
 
 
 class PlayerResource(ModelResource):
+    user = fields.ToOneField(UserResource, 'user', full=True)
     class Meta:
         queryset = Player.objects.all()
         allowed_methods = ALL_METHODS
