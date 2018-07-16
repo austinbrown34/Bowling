@@ -3,6 +3,9 @@ import re
 
 
 class GameManager(object):
+    """GameManager is a factory for creating a Game with Players and setting up initial state.
+
+    """
     @staticmethod
     def new_game(player_ids):
         GameManager.setup()
