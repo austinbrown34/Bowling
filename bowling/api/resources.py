@@ -1,15 +1,29 @@
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS, ALL, Resource
-from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication, BasicAuthentication
 from tastypie.authorization import Authorization, DjangoAuthorization
 from tastypie import fields
 from bowling.models import Player, Frame, Chance, Game, PlayerGame, GamePlayer
+from django.contrib.auth.models import User
 from bowling.managers import GameManager
 from django.conf.urls import url
 from tastypie.utils import trailing_slash
 from tastypie.bundle import Bundle
+import json
 
 
 ALL_METHODS = ['get', 'post', 'put', 'delete', 'patch']
+
+
+class UserResource(ModelResource):
+    class Meta:
+        queryset = User.objects.all()
+        allowed_methods = ALL_METHODS
+        resource_name = 'user'
+        authorization = DjangoAuthorization()
+        authentication = MultiAuthentication(
+            ApiKeyAuthentication(),
+            SessionAuthentication()
+        )
 
 
 class GameManagerResource(Resource):
@@ -19,7 +33,8 @@ class GameManagerResource(Resource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
 
     def get_object_list(self, request):
@@ -52,10 +67,9 @@ class GameManagerResource(Resource):
         return self._build_reverse_url('api_dispatch_detail', kwargs=kwargs)
 
     def new_game(self, request, **kwargs):
+        self.is_authenticated(request)
         if request.method == 'GET':
             players = request.GET.get('players', '')
-        if request.method == 'POST':
-            players = request.POST.get('players', '')
         game = GameManager.new_game(players.split(','))
         return self.create_response(
             request,
@@ -64,6 +78,7 @@ class GameManagerResource(Resource):
 
 
 class PlayerResource(ModelResource):
+    user = fields.ToOneField(UserResource, 'user', full=True)
     class Meta:
         queryset = Player.objects.all()
         allowed_methods = ALL_METHODS
@@ -71,7 +86,8 @@ class PlayerResource(ModelResource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
         ordering = {
             'date_created': ALL,
@@ -83,6 +99,31 @@ class PlayerResource(ModelResource):
             'date_created': ALL,
             'date_updated': ALL
         }
+
+    def prepend_urls(self):
+        """ Add following array of urls to PlayerResource base urls """
+        return [
+            url(r"^(?P<resource_name>%s)/create%s$" %
+                (self._meta.resource_name, trailing_slash()),
+                self.wrap_view('create'), name="create")
+        ]
+
+    def create(self, request, **kwargs):
+        self.is_authenticated(request)
+        if request.method == 'POST':
+            data = json.loads(request.body)
+            user = data['user']
+            name = data['name']
+        new_user = User.objects.create_user(
+            username=user['username'],
+            password=user['password']
+        )
+        new_user.player.name = name
+        User.save(new_user)
+        return self.create_response(
+            request,
+            {'New Player': self.get_resource_uri(new_user)}
+        )
 
 
 class FrameResource(ModelResource):
@@ -138,7 +179,8 @@ class GameResource(ModelResource):
         authorization = DjangoAuthorization()
         authentication = MultiAuthentication(
             ApiKeyAuthentication(),
-            SessionAuthentication()
+            SessionAuthentication(),
+            BasicAuthentication()
         )
         ordering = {
             'date_created': ALL,
@@ -152,7 +194,7 @@ class GameResource(ModelResource):
         }
 
     def prepend_urls(self):
-        """ Add following array of urls to GameManagerResource base urls """
+        """ Add following array of urls to GameResource base urls """
         return [
             url(r"^(?P<resource_name>%s)/(?P<pk>\w[\w/-]*)/start%s$" %
                 (self._meta.resource_name, trailing_slash()),
