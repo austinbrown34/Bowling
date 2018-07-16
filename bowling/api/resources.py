@@ -1,15 +1,29 @@
 from tastypie.resources import ModelResource, ALL_WITH_RELATIONS, ALL, Resource
-from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication
+from tastypie.authentication import ApiKeyAuthentication, MultiAuthentication, SessionAuthentication, BasicAuthentication
 from tastypie.authorization import Authorization, DjangoAuthorization
 from tastypie import fields
 from bowling.models import Player, Frame, Chance, Game, PlayerGame, GamePlayer
+from django.contrib.auth.models import User
 from bowling.managers import GameManager
 from django.conf.urls import url
 from tastypie.utils import trailing_slash
 from tastypie.bundle import Bundle
+import json
 
 
 ALL_METHODS = ['get', 'post', 'put', 'delete', 'patch']
+
+
+class UserResource(ModelResource):
+    class Meta:
+        queryset = User.objects.all()
+        allowed_methods = ALL_METHODS
+        resource_name = 'user'
+        authorization = DjangoAuthorization()
+        authentication = MultiAuthentication(
+            ApiKeyAuthentication(),
+            SessionAuthentication()
+        )
 
 
 class GameManagerResource(Resource):
